@@ -2,6 +2,7 @@
 # Lexer
 #############################
 from tokens import Token, TokenType
+from collections import deque
 
 WHITESPACE = " \n\t"
 DIGITS = "0123456789"
@@ -11,13 +12,13 @@ KEYWORDS = ["return","if","else","function","while","for","do"]
 
 class Lexer:
     def __init__(self, text):
-        self.text = iter(text)
+        self.text = deque(text)
         self.advance()
     
     def advance(self):
-        try:
-            self.current_char = next(self.text)
-        except StopIteration:
+        if self.text:
+            self.current_char = self.text.popleft()
+        else:
             self.current_char = None
 
     def generate_tokens(self):
@@ -29,8 +30,9 @@ class Lexer:
                 self.advance()
                 yield current_token
             elif self.current_char in OPERATORS:
-                if self.current_char == "/" and next(self.text, None) == "/":
+                if self.current_char == "/" and self.text[0] == "/": 
                     self.skip_comment()
+                    continue
                 current_token = Token(TokenType.OPERATOR, self.current_char)
                 self.advance()
                 yield current_token
@@ -43,7 +45,6 @@ class Lexer:
 
     # function to generate identifier and keyword tokens
     def generate_phrase(self):
-        print(self.current_char)
         phrase = self.current_char
         self.advance()
 
