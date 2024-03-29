@@ -5,6 +5,9 @@ from tokens import Token, TokenType
 
 WHITESPACE = " \n\t"
 DIGITS = "0123456789"
+OPERATORS = "+-/*!=<>^"
+SEPARATORS = "();{}"
+KEYWORDS = ["return","if","else","function","while","for","do"]
 
 class Lexer:
     def __init__(self, text):
@@ -21,49 +24,41 @@ class Lexer:
         while self.current_char != None:
             if self.current_char in WHITESPACE:
                 self.advance()
-            elif self.current_char == '.' or self.current_char in DIGITS:
-                yield self.generate_number()
-            elif self.current_char == '+':
+            elif self.current_char in DIGITS:
+                current_token = Token(TokenType.INTEGER, self.current_char)
                 self.advance()
-                yield Token(TokenType.PLUS)
-            elif self.current_char == '-':
+                yield current_token
+            elif self.current_char in OPERATORS:
+                if self.current_char == "/" and next(self.text, None) == "/":
+                    self.skip_comment()
+                current_token = Token(TokenType.OPERATOR, self.current_char)
                 self.advance()
-                yield Token(TokenType.MINUS)
-            elif self.current_char == '*':
+                yield current_token
+            elif self.current_char in SEPARATORS:
+                current_token = Token(TokenType.SEPARATOR, self.current_char)
                 self.advance()
-                yield Token(TokenType.MUL)
-            elif self.current_char == '/':
-                self.advance()
-                yield Token(TokenType.DIV)
-            elif self.current_char == '(':
-                self.advance()
-                yield Token(TokenType.LPAREN)
-            elif self.current_char == ')':
-                self.advance()
-                yield Token(TokenType.RPAREN)
+                yield current_token
             else:
-                raise Exception(f"Illegal character '{self.current_char}'")
+                yield self.generate_phrase()
 
-    def generate_number(self):
-        decimal_point_count = 0
-        number_str = self.current_char
+    # function to generate identifier and keyword tokens
+    def generate_phrase(self):
+        print(self.current_char)
+        phrase = self.current_char
         self.advance()
 
-        while self.current_char != None and (self.current_char == '.' or self.current_char in DIGITS):
-            if self.current_char == '.':
-                decimal_point_count += 1
-                if decimal_point_count > 1:
-                    break
-            number_str += self.current_char
+        while self.current_char != None and self.current_char not in (WHITESPACE + SEPARATORS + OPERATORS):
+            phrase += self.current_char
             self.advance()
+            if phrase in KEYWORDS:
+                return Token(TokenType.KEYWORD, phrase)
 
-        if(number_str.startswith('.')):
-            number_str = '0' + number_str
-        if(number_str.endswith('.')):
-            number_str = number_str + '0'
-
-        return Token(TokenType.NUMBER, float(number_str))
-
-
-
+        if self.current_char == None or self.current_char in (WHITESPACE + SEPARATORS):
+            return Token(TokenType.IDENTIFIER, phrase)
+        else:
+            raise Exception(f"Illegal character '{self.current_char}' after declaration of phrase '{phrase}'")
     
+    # skips a single line of text until newline is reached
+    def skip_comment(self):
+        while(self.current_char != None and self.current_char != "\n"):
+            self.advance()

@@ -3,14 +3,10 @@
 #############################
 from lexer import Lexer
 
-inputText = ""
+inputFile = open("input.txt", "r")
+inputText = inputFile.read()
+inputFile.close()
 
-while True:
-    inputText = input("basic-b > ")
-    if inputText == "EXIT":
-        break
-    lexer = Lexer(inputText)
-    tokens = lexer.generate_tokens()
-    print(list(tokens))
-
-print("\n-----------------------------------------------\n Exitted Basic-Barrel interpreter successfully.\n-----------------------------------------------\n")
+lexer = Lexer(inputText)
+tokens = lexer.generate_tokens()
+print(list(tokens))
